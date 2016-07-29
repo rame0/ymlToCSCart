@@ -24,13 +24,16 @@ $(document).ready(function () {
     $('form.field-mapping select.ympOption').change(function () {
         changeSampleData(this);
     });
+
+    $('.dataModifer').dataModifer();
+
     function changeSampleData(element) {
         var $selOpt = $(element).find("option:selected");
         var $parent = $(element).parent();
-        $parent.find(".sampleData span.title").show();
-        $parent.find("#dataModifer").hide();
+        $parent.find(".sampleData, .sampleData span").show();
+
         if ($selOpt.val() === "-1") {
-            $parent.find(".sampleData span").hide();
+            $parent.children(".sampleData").hide();
             return;
         } else if ($selOpt.val() === "text") {
             $parent.find(".sampleData span.title").hide();
@@ -39,10 +42,87 @@ $(document).ready(function () {
                     );
         } else {
             $parent.find(".sampleData span.data").text(Base64.decode($selOpt.data('sample')));
-            $parent.find("#dataModifer").show();
         }
     }
 });
+/**
+ * dataModifer object.
+ * Creates constructor form to deal with raw YML data
+ */
+
++function ($) {
+    'use strict';
+
+    // PUBLIC CLASS DEFINITION
+    var DataModifer = function (element, options) {
+        this.$element = $(element);
+        this.options = $.extend({}, DataModifer.DEFAULTS, options);
+        this.$switcher = this.$element.find(this.options.switcher);
+        this.$formwrapper = this.$element.find(this.options.formwrapper).hide();
+
+        this.$switcher.on('change', $.proxy(this.switch, this));
+    };
+
+    DataModifer.DEFAULTS = {
+        switcher: "input.enableConstructor",
+        formwrapper: ".constructor",
+    };
+    DataModifer.prototype.switch = function (event) {
+        var $this = $(event.target);
+
+        if ($this.is(":checked")) {
+            this.showForm();
+        } else {
+            this.hideForm();
+        }
+    }
+    DataModifer.prototype.show = function () {
+        this.$element.show();
+    };
+    DataModifer.prototype.hide = function () {
+        this.$element.hide();
+    };
+
+    DataModifer.prototype.showForm = function () {
+        this.$formwrapper.show();
+    };
+    DataModifer.prototype.hideForm = function () {
+        this.$formwrapper.html('').hide();
+    };
+    DataModifer.prototype.changeType = function (type) {
+
+    };
+    DataModifer.prototype.fill = function (data) {
+
+    };
+
+// PLUGIN DEFINITION
+    function Plugin(option) {
+        return this.each(function () {
+            var $this = $(this);
+            var data = $this.data('DataModifer');
+            var options = typeof option === 'object' && option;
+
+            if (!data)
+                $this.data('DataModifer', (data = new DataModifer(this, options)));
+        });
+    }
+
+    var old = $.fn.dataModifer;
+
+    $.fn.dataModifer = Plugin;
+    $.fn.dataModifer.Constructor = DataModifer;
+
+//NO CONFLICT
+
+    $.fn.dataModifer.noConflict = function () {
+        $.fn.dataModifer = old;
+        return this;
+    }
+
+}(jQuery);
+
+
 
 /**
  *
@@ -122,7 +202,6 @@ var Base64 = {
             }
         }
         return utftext;
-
     },
     //метод для раскодировки из urf8
     _utf8_decode: function (utftext) {
