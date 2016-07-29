@@ -42,14 +42,17 @@ include 'tpl/head.php';
                 // Load offers child nodes from YML
                 $params = $yml->xpath('/yml_catalog/shop/offers/offer/child::*');
                 //var_dump($params);die();
-                $uniqueYMLParams = [];
+                $usedYMLParams = [];
+                $ymlParams = [];
 
                 /* @var $params SimpleXMLElement */
                 // Find out what we got in offer node attributes and add them in our list
                 // also save in value where option is come from
                 foreach ($yml->shop->offers->offer[0]->attributes() as $atrName => $atrVal) {
-                    $uniqueYMLParams[] = "attr//$atrName";
+                    $usedYMLParams[] = "attr-$atrName";
+                    $ymlParams[] = ["attr-$atrName", $atrVal->__toString()];
                 }
+
                 // find out which child nodes of offer we have
                 // and save 'param' childs with unique names as separate fields
                 // we need only unique tags and params, so we have to check that too
@@ -58,20 +61,26 @@ include 'tpl/head.php';
                     /* @var $param SimpleXMLElement */
                     $tagName = $param->getName();
                     // if we find param, thet get its attr 'name' value as param name
-                    if ($tagName == "param" && !in_array('tag//param//' . $param['name']->__toString(), $uniqueYMLParams)) {
-                        $uniqueYMLParams[] = 'tag//param//' . $param['name']->__toString();
-                        // set special value, so we will know that we have to build this value before add to results
-                    } elseif ($tagName == "categoryId" && !in_array("build_Cat_Name", $uniqueYMLParams)) {
-                        $uniqueYMLParams[] = "build_Cat_Name";
-                    } elseif (!in_array("tag//$tagName", $uniqueYMLParams)) {
-                        $uniqueYMLParams[] = "tag//$tagName";
+                    if ($tagName == "param") {
+                        if (!in_array('tag-param-' . $param['name']->__toString(), $usedYMLParams)) {
+                            $usedYMLParams[] = 'tag-param-' . $param['name']->__toString();
+                            $ymlParams[] = ['tag-param-' . $param['name']->__toString(), $param->__toString()];
+                            // set special value, so we will know that we have to build this value before add to results
+                        } else {
+                            continue;
+                        }
+                    } elseif ($tagName == "categoryId" && !in_array("build_Cat_Name", $usedYMLParams)) {
+                        $usedYMLParams[] = "build_Cat_Name";
+                        $ymlParams[] = ['build_Cat_Name', ""];
+                        // save other tags
+                    } elseif (!in_array("tag-$tagName", $usedYMLParams)) {
+                        $usedYMLParams[] = "tag-$tagName";
+                        $ymlParams[] = ["tag-$tagName", $param->__toString()];
                     }
                 }
-
                 // sorting array might be usefull
-                sort($uniqueYMLParams, SORT_ASC);
+                sort($ymlParams, SORT_ASC);
 
-                $featuresFldKey = -1;
                 // now, we'll fill our forv
                 ?>
                 <div class="form-group">
@@ -83,23 +92,26 @@ include 'tpl/head.php';
                 <?
                 foreach ($csvFields as $csvFldKey => $fld) :
                     if ($fld == "Features") {
-                        $featuresFldKey = $csvFldKey;
+                        $features = explode("; ", $csvGoodsData[$csvFldKey]);
+                        ?>
+                        <div class="col-sm-11 col-sm-offset-1">
+                            <h3>Params</h3>
+                            <?
+                            foreach ($features as $feature) {
+                                list($name, $tmp) = explode(": ", $feature);
+                                $tmp = explode("[", $tmp);
+                                $type = $tmp[0];
+                                $value = trim($tmp[1], "]");
+
+                                showOption("feature-$name", $name, $value, $ymlParams, $config);
+                            }
+                            ?>
+                        </div>
+                        <?
                         continue;
                     }
+                    showOption($csvFldKey, $fld, $csvGoodsData[$csvFldKey], $ymlParams, $config);
                     ?>
-                    <div class="form-group">
-                        <label for="fld-<?= $csvFldKey ?>" class="col-sm-3"><?= $csvFldKey ?> - <?= $fld ?><br/><span class="small"><?= $csvGoodsData[$csvFldKey] ?></span></label>
-                        <div class="col-sm-9">
-                            <select class="form-control" name="csv" id="fld-<?= $csvFldKey ?>">
-                                <option value='-1'>--</option>
-                                <? foreach ($uniqueYMLParams as $ymlParam) :
-                                    // if field mapped in config make it selected by default
-                                    ?>
-                                    <option value="<?= $ymlParam ?>"<?= $config['default_mapping']['field'][$csvFldKey] == $ymlParam ? ' selected' : '' ?>><?= $ymlParam ?></option>
-                                <? endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
                 <? endforeach; ?>
             <? }
             ?>
@@ -127,3 +139,36 @@ include 'tpl/head.php';
 </div>
 <?
 include 'tpl/foot.php';
+
+/**
+ * Function to add select with YML fields for CSV<->YML field mapping
+ * @param int $id id of CSV field
+ * @param string $name Name of CSV field
+ * @param string $value Demo value of CSV field
+ * @param array $ymlParams Array with YML fields
+ * @param array $config Array with config
+ */
+function showOption($id, $name, $value, $ymlParams, $config) {
+    ?>
+    <div class="form-group">
+        <label for="fld-<?= $id ?>" class="col-sm-3"><div><?= $id ?> - <?= $name ?></div><span class="small"><?= $value ?></span></label>
+        <div class="col-sm-9">
+            <select class="form-control ympOption" name="csv" id="fld-<?= $id ?>">
+                <option value='-1'> -- </option>
+                <option value='text'> Custom text</option>
+                <?
+                foreach ($ymlParams as $ymlParam) :
+                    // if field mapped in config make it selected by default
+                    ?>
+                    <option value="<?= $ymlParam[0] ?>" data-sample="<?= base64_encode($ymlParam[1]) ?>"<?= isset($config['default_mapping']['field'][$id]) && $config['default_mapping']['field'][$id] == $ymlParam[0] ? ' selected' : '' ?>><?= "$ymlParam[0]" ?></option>
+                <? endforeach; ?>
+            </select>
+            <div class="sampleData"><span class="title">Пример: </span><span class="data"></span></div>
+            <div id="dataModifer">
+                <div><label><input type="checkbox" id="enableConstructor"/> Enable data modifer</label></div>
+                <div class="constructor"></div>
+            </div>
+        </div>
+    </div>
+    <?
+}
