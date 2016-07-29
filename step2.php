@@ -164,9 +164,9 @@ function showOption($id, $name, $value, $ymlParams, $config) {
                 <? endforeach; ?>
             </select>
             <div class="sampleData"><span class="title">Пример: </span><span class="data"></span></div>
-            <div id="dataModifer">
-                <div><label><input type="checkbox" id="enableConstructor"/> Enable data modifer</label></div>
-                <div class="constructor"></div>
+            <div class="dataModifer">
+                <label><input type="checkbox" class="enableConstructor"/> Enable data modifer</label>
+                <div class="constructor">testing</div>
             </div>
         </div>
     </div>
