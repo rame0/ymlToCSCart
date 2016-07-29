@@ -10,9 +10,9 @@ USER_PASS              = "password"
 [default_mapping]
 
 ;Product Code
-field[0] = "attr//id"
+field[0] = "tag//vendorCode"
 ;Product id
-field[2] = "tag//vendorCode"
+field[2] = "attr//id"
 ;Category
 field[3] = "build_Cat_Name"
 ;Price
