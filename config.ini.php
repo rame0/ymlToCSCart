@@ -21,3 +21,14 @@ field[5] = 'tag//price'
 field[19] = 'tag//name'
 ;Status
 field[34] = 'attr//available'
+
+[features_types]
+
+feature[C] = "Single"
+feature[M] = "Multiple"
+feature[S] = "Text"
+feature[N] = "Number"
+feature[E] = "Brand/Manufacturer"
+feature[T] = "Text"
+feature[O] = "Number"
+feature[D] = "Date"
