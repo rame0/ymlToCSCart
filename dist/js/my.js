@@ -18,30 +18,30 @@
 
 $(document).ready(function () {
     'use strict';
+    $('.dataModifer').dataModifer();
     $('form.field-mapping select.ympOption').each(function () {
         changeSampleData(this);
     });
     $('form.field-mapping select.ympOption').change(function () {
         changeSampleData(this);
     });
-
-    $('.dataModifer').dataModifer();
-
     function changeSampleData(element) {
-        var $selOpt = $(element).find("option:selected");
-        var $parent = $(element).parent();
+        var $element = $(element);
+        var $selOpt = $element.find("option:selected");
+        var $parent = $element.parent();
         $parent.find(".sampleData, .sampleData span").show();
-
         if ($selOpt.val() === "-1") {
             $parent.children(".sampleData").hide();
-            return;
+            $element.siblings('.dataModifer').dataModifer('hide');
         } else if ($selOpt.val() === "text") {
             $parent.find(".sampleData span.title").hide();
+            $element.siblings('.dataModifer').dataModifer('hide');
             $parent.find(".sampleData span.data").show().text('').append(
                     $("<input/>").prop({'class': "text form-control", "placeholder": "Текст для поля " + $parent.parent().find('label div').text()})
                     );
         } else {
             $parent.find(".sampleData span.data").text(Base64.decode($selOpt.data('sample')));
+            $element.siblings('.dataModifer').dataModifer('show');
         }
     }
 });
@@ -52,67 +52,122 @@ $(document).ready(function () {
 
 +function ($) {
     'use strict';
-
     // PUBLIC CLASS DEFINITION
     var DataModifer = function (element, options) {
-        this.$element = $(element);
+        this.$element = $(element).hide();
         this.options = $.extend({}, DataModifer.DEFAULTS, options);
-        this.$switcher = this.$element.find(this.options.switcher);
-        this.$formwrapper = this.$element.find(this.options.formwrapper).hide();
+        this.$switcher = $("<input/>", {class: this.options.switcherClass, type: "checkbox"});
+        var label = $("<label/>");
+        label.html(' Enable data modifer');
+        label.prepend(this.$switcher);
+        this.$formwrapper = $('<div/>', {class: this.options.formwrapperClass});
+        this.$element.append(label);
+        this.$element.append(this.$formwrapper);
+        this.$selectType = $('<select/>', {class: this.options.selectTypeClass});
+        this.$selectType.append($('<option/>', {value: 'none'}).text('--'));
+        for (var key in options.forms) {
+            this.$selectType.append($('<option/>', {value: key}).text(options.forms[key].name));
+        }
 
+        this.$selectType.appendTo(this.$formwrapper);
+        this.$settingsForm = $("<div/>", {class: this.options.formContainerClass}).appendTo(this.$formwrapper);
+        this.hide();
+        this.$formwrapper.hide();
         this.$switcher.on('change', $.proxy(this.switch, this));
+        this.$selectType.on('change', $.proxy(this.changeType, this));
     };
-
     DataModifer.DEFAULTS = {
-        switcher: "input.enableConstructor",
-        formwrapper: ".constructor",
+        switcherClass: "enableConstructor",
+        formwrapperClass: "constructor",
+        formContainerClass: "settingsform form-inline",
+        selectTypeClass: 'selectType form-control',
+        forms: {
+            replace: {
+                name: "Replace",
+                fields: [
+                    {tag: 'h4', text: 'Replace text'},
+                    {tag: 'div', attrs: {class: 'form-group'},
+                        childs: [
+                            {tag: 'label', attrs: {for : 'what'}, text: 'What:'},
+                            {tag: 'input', attrs: {name: 'what', class: 'form-control'}},
+                        ]
+                    },
+                    {tag: 'div', attrs: {class: 'form-group'},
+                        childs: [
+                            {tag: 'label', attrs: {for : 'with'}, text: 'With:'},
+                            {tag: 'input', attrs: {name: 'with', class: 'form-control'}},
+                        ]
+                    }
+                ]
+            }
+        }
     };
     DataModifer.prototype.switch = function (event) {
         var $this = $(event.target);
-
         if ($this.is(":checked")) {
             this.showForm();
         } else {
             this.hideForm();
         }
     }
-    DataModifer.prototype.show = function () {
+    DataModifer.prototype.show = function (element, data) {
         this.$element.show();
     };
-    DataModifer.prototype.hide = function () {
+    DataModifer.prototype.hide = function (element, data) {
         this.$element.hide();
     };
-
-    DataModifer.prototype.showForm = function () {
+    DataModifer.prototype.showForm = function (element, data) {
         this.$formwrapper.show();
     };
-    DataModifer.prototype.hideForm = function () {
-        this.$formwrapper.html('').hide();
+    DataModifer.prototype.hideForm = function (element, data) {
+        this.$settingsForm.html('');
+        this.$selectType[0].selectedIndex = 0;
+        this.$formwrapper.hide();
     };
-    DataModifer.prototype.changeType = function (type) {
+    DataModifer.prototype.changeType = function (event, data) {
+        var $this = $(event.target);
+        var formType = $this.val();
+        this.$settingsForm.html('');
+        if (this.options.forms.hasOwnProperty(formType)) {
+            this.constructActionInputs(this.$settingsForm, this.options.forms[formType].fields);
+        }
 
     };
-    DataModifer.prototype.fill = function (data) {
+    DataModifer.prototype.fill = function (element, data) {
 
     };
+
+    DataModifer.prototype.constructActionInputs = function ($parent, fields) {
+        for (var i = 0; i < fields.length; i++) {
+            var $fld = $("<" + fields[i].tag + "/>", fields[i].attrs);
+            if (fields[i].text) {
+                $fld.text(fields[i].text);
+            }
+            if (fields[i].childs) {
+                this.constructActionInputs($fld, fields[i].childs);
+            }
+            $parent.append($fld);
+        }
+    }
 
 // PLUGIN DEFINITION
-    function Plugin(option) {
+    function Plugin(option, _args) {
         return this.each(function () {
             var $this = $(this);
             var data = $this.data('DataModifer');
-            var options = typeof option === 'object' && option;
-
-            if (!data)
-                $this.data('DataModifer', (data = new DataModifer(this, options)));
+            if (data && data[option]) {
+                return data[option].apply(data, [Array.prototype.slice.call(arguments, 1), _args]);
+            } else if (typeof option === 'object' || !option) {
+                var options = $.extend({}, DataModifer.DEFAULTS, $this.data(), typeof option === 'object' && option)
+                if (!data)
+                    $this.data('DataModifer', (data = new DataModifer(this, options)));
+            }
         });
     }
 
     var old = $.fn.dataModifer;
-
     $.fn.dataModifer = Plugin;
     $.fn.dataModifer.Constructor = DataModifer;
-
 //NO CONFLICT
 
     $.fn.dataModifer.noConflict = function () {
@@ -121,9 +176,6 @@ $(document).ready(function () {
     }
 
 }(jQuery);
-
-
-
 /**
  *
  * Base64 encode/decode
