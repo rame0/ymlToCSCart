@@ -18,6 +18,7 @@
 
 include 'config.php';
 include 'tpl/head.php';
+
 ?>
 <h1>Step 2: Fields mapping</h1>
 <div class="row">
@@ -103,7 +104,7 @@ include 'tpl/head.php';
                                 $type = $tmp[0];
                                 $value = trim($tmp[1], "]");
 
-                                showOption("feature-$name", $name, $value, $ymlParams, $config);
+                                showOption("feature-$name", $name, [$value, $type], $ymlParams, $config);
                             }
                             ?>
                         </div>
@@ -144,14 +145,25 @@ include 'tpl/foot.php';
  * Function to add select with YML fields for CSV<->YML field mapping
  * @param int $id id of CSV field
  * @param string $name Name of CSV field
- * @param string $value Demo value of CSV field
+ * @param mixed $value Demo value of CSV field. If $name is string it is used as it is. If $name is array, then the first item used as demo-value, and the second used as type.
  * @param array $ymlParams Array with YML fields
  * @param array $config Array with config
  */
 function showOption($id, $name, $value, $ymlParams, $config) {
+    $type = false;
+    if (is_array($value)) {
+        $type = $value[1];
+        $value = $value[0];
+    }
     ?>
     <div class="form-group">
-        <label for="fld-<?= $id ?>" class="col-sm-3"><div><?= $id ?> - <?= $name ?></div><span class="small"><?= $value ?></span></label>
+        <label for="fld-<?= $id ?>" class="col-sm-3">
+            <div><?= $id ?> - <?= $name ?></div>
+            <span class="small"><?= $value ?></span>
+            <? if ($type !== false && !empty($config['features_types']['feature'][$type])): ?>
+                <div>Type: <?= $config['features_types']['feature'][$type] ?></div>
+            <? endif ?>
+        </label>
         <div class="col-sm-9">
             <select class="form-control ympOption" name="csv" id="fld-<?= $id ?>">
                 <option value='-1'> -- </option>
@@ -164,10 +176,7 @@ function showOption($id, $name, $value, $ymlParams, $config) {
                 <? endforeach; ?>
             </select>
             <div class="sampleData"><span class="title">Пример: </span><span class="data"></span></div>
-            <div class="dataModifer">
-                <label><input type="checkbox" class="enableConstructor"/> Enable data modifer</label>
-                <div class="constructor">testing</div>
-            </div>
+            <div class="dataModifer"></div>
         </div>
     </div>
     <?
