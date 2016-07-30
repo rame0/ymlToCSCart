@@ -165,7 +165,7 @@ function showOption($id, $name, $value, $ymlParams, $config) {
             <? endif ?>
         </label>
         <div class="col-sm-9">
-            <select class="form-control ympOption" name="csv" id="fld-<?= $id ?>">
+            <select class="form-control ympOption" name="fld-<?= $id ?>" id="fld-<?= $id ?>">
                 <option value='-1'> -- </option>
                 <option value='text'> Custom text</option>
                 <?
