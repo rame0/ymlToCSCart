@@ -25,6 +25,8 @@ $(document).ready(function () {
     $('form.field-mapping select.ympOption').change(function () {
         changeSampleData(this);
     });
+    $('button#savePreset').on('click', savePreset);
+
     function changeSampleData(element) {
         var $element = $(element);
         var $selOpt = $element.find("option:selected");
@@ -45,6 +47,48 @@ $(document).ready(function () {
         }
     }
 });
+
+function savePreset() {
+    var formFields = $('form.field-mapping > .form-group,form.field-mapping > div > .form-group');
+    var data = [];
+    formFields.each(function () {
+        var $this = $(this);
+        var $element = $this.find('.ympOption');
+
+        if ($element.length > 0 && $element.val() !== '-1') {
+            var elData = {csvField: $element.attr('name'), ymlField: $element.val()};
+
+
+            var $constructor = $this.find('.constructor');
+            var $settingsForm = $constructor.find('.settingsform');
+            var $selType = $constructor.find('.selectType');
+
+            if ($settingsForm.length > 0 && $selType.val() !== '-1') {
+                var $inputs = $settingsForm.find('input');
+                var constructorFields = [];
+                $inputs.each(function () {
+                    constructorFields.push({name: $(this).attr('name'), val: $(this).val()});
+                });
+                elData.modifer = {
+                    type: $selType.val(),
+                    params: constructorFields
+                }
+            }
+            data.push(elData);
+        }
+    });
+
+    var presetName = prompt('Enter name for preset\r\n !!! If file with this name already exists it will be overwritten !!!');
+
+    if (presetName) {
+        $.ajax({
+            url: "savePreset.php",
+            method: 'POST',
+            data: {"data": data, fname: presetName}
+        });
+    }
+}
+
 /**
  * dataModifer object.
  * Creates constructor form to deal with raw YML data
@@ -63,14 +107,14 @@ $(document).ready(function () {
         this.$formwrapper = $('<div/>', {class: this.options.formwrapperClass});
         this.$element.append(label);
         this.$element.append(this.$formwrapper);
-        this.$selectType = $('<select/>', {class: this.options.selectTypeClass});
-        this.$selectType.append($('<option/>', {value: 'none'}).text('--'));
+        this.$selectType = $('<select/>', {class: this.options.selectTypeClass, name: 'modiferTypeSelector'});
+        this.$selectType.append($('<option/>', {value: '-1'}).text('--'));
         for (var key in options.forms) {
             this.$selectType.append($('<option/>', {value: key}).text(options.forms[key].name));
         }
 
         this.$selectType.appendTo(this.$formwrapper);
-        this.$settingsForm = $("<div/>", {class: this.options.formContainerClass}).appendTo(this.$formwrapper);
+
         this.hide();
         this.$formwrapper.hide();
         this.$switcher.on('change', $.proxy(this.switch, this));
@@ -117,10 +161,11 @@ $(document).ready(function () {
         this.$element.hide();
     };
     DataModifer.prototype.showForm = function (element, data) {
+        this.$settingsForm = $("<div/>", {class: this.options.formContainerClass}).appendTo(this.$formwrapper);
         this.$formwrapper.show();
     };
     DataModifer.prototype.hideForm = function (element, data) {
-        this.$settingsForm.html('');
+        this.$settingsForm.remove();
         this.$selectType[0].selectedIndex = 0;
         this.$formwrapper.hide();
     };
