@@ -18,7 +18,7 @@
  */
 
 // Load Config
-$config = parse_ini_file('config.ini.php',TRUE);
+$config = parse_ini_file('config.ini.php', TRUE);
 
 // Die if config not found or broken
 if ($config === false) {
@@ -29,7 +29,7 @@ if ($config === false) {
 $isLoggedIn = false;
 if ($config['login']['USE_PASS'] === 'NO') {
     $isLoggedIn = true;
-} elseif ($_COOKIE['login'] == $config['login']['USER_LOGIN'] && $_COOKIE['password'] == md5($config['login']['USER_PASS'])) {
+} elseif (isset($_COOKIE['login']) && isset($_COOKIE['password']) && $_COOKIE['login'] == $config['login']['USER_LOGIN'] && $_COOKIE['password'] == md5($config['login']['USER_PASS'])) {
     $isLoggedIn = true;
 }
 
