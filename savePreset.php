@@ -20,7 +20,7 @@
 include 'config.php';
 
 if (!empty($_POST) && !empty($_POST['data']) && is_array($_POST['data']) && !empty($_POST['fname']) && is_string($_POST['fname'])) {
-    if (file_put_contents("$presetDir{$_POST['fname']}.preset", serialize($_POST['data']))) {
+    if (file_put_contents("$presetDir{$_POST['fname']}.preset", json_encode($_POST['data']))) {
         return json_encode(["result" => 'done']);
     } else {
         json_encode(["result" => 'error', 'message' => "Can't save file"]);
