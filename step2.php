@@ -19,6 +19,13 @@
 include 'config.php';
 include 'tpl/head.php';
 
+$presetsFiles = scandir($presetDir);
+$presets = [];
+foreach ($presetsFiles as $value) {
+    if (!in_array($value, array('.', '..'))) {
+        $presets[] = $value;
+    }
+}
 ?>
 <h1>Step 2: Fields mapping</h1>
 <div class="row">
@@ -104,14 +111,14 @@ include 'tpl/head.php';
                                 $type = $tmp[0];
                                 $value = trim($tmp[1], "]");
 
-                                showOption("feature-$name", $name, [$value, $type], $ymlParams, $config);
+                                showOption(crc32("feature-$name"), $name, [$value, $type], $ymlParams, $config);
                             }
                             ?>
                         </div>
                         <?
                         continue;
                     }
-                    showOption($csvFldKey, $fld, $csvGoodsData[$csvFldKey], $ymlParams, $config);
+                    showOption(crc32($fld), $fld, $csvGoodsData[$csvFldKey], $ymlParams, $config);
                     ?>
                 <? endforeach; ?>
             <? }
@@ -121,18 +128,21 @@ include 'tpl/head.php';
     <div class="col-sm-2">
         <div class="row">
             <h4>Use preset</h4>
-            <span class="small alert-info">In development</span>
             <div>
                 <select class="form-control" id="preset">
-                    <option value="none">--</option>
+                    <option value="-1">--</option>
+                    <? for ($i = 0; $i < count($presets); $i++): ?>
+                        <option value="<?= $presets[$i] ?>"><?= $presets[$i] ?></option>
+                    <? endfor; ?>
                 </select>
+                <button id="loadPreset" class="btn btn-success btn-sm">Load preset</button>
             </div>
         </div>
         <hr/>
         <div class="row">
-            <button id="savePreset" class="btn btn-primary">Save Preset</button>
+            <button id="savePreset" class="btn btn-primary btn-sm">Save Preset</button>
         </div>
-
+        <hr/>
         <div class="row">
             <button id="nextStep" class="btn btn-primary">Next Step</button>
         </div>
@@ -157,15 +167,15 @@ function showOption($id, $name, $value, $ymlParams, $config) {
     }
     ?>
     <div class="form-group">
-        <label for="fld-<?= $id ?>" class="col-sm-3">
-            <div><?= $id ?> - <?= $name ?></div>
+        <label for="<?= $id ?>" class="col-sm-3">
+            <div><?= $name ?></div>
             <span class="small"><?= $value ?></span>
             <? if ($type !== false && !empty($config['features_types']['feature'][$type])): ?>
                 <div>Type: <?= $config['features_types']['feature'][$type] ?></div>
             <? endif ?>
         </label>
         <div class="col-sm-9">
-            <select class="form-control ympOption" name="fld-<?= $id ?>" id="fld-<?= $id ?>">
+            <select class="form-control ympOption" name="<?= $id ?>" id="<?= $id ?>">
                 <option value='-1'> -- </option>
                 <option value='text'> Custom text</option>
                 <?
@@ -175,7 +185,7 @@ function showOption($id, $name, $value, $ymlParams, $config) {
                     <option value="<?= $ymlParam[0] ?>" data-sample="<?= base64_encode($ymlParam[1]) ?>"<?= isset($config['default_mapping']['field'][$id]) && $config['default_mapping']['field'][$id] == $ymlParam[0] ? ' selected' : '' ?>><?= "$ymlParam[0]" ?></option>
                 <? endforeach; ?>
             </select>
-            <div class="sampleData"><span class="title">Пример: </span><span class="data"></span></div>
+            <div class="sampleData"><span class="title">Example: </span><span class="data"></span></div>
             <div class="dataModifer"></div>
         </div>
     </div>
