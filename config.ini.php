@@ -10,17 +10,17 @@ USER_PASS              = "password"
 [default_mapping]
 
 ;Product Code
-field[0] = "tag-vendorCode"
+field[2572074719] = "tag-vendorCode"
 ;Product id
-field[2] = "attr-id"
+field[1433684711] = "attr-id"
 ;Category
-field[3] = "build_Cat_Name"
+field[4282022807] = "build_Cat_Name"
 ;Price
-field[5] = 'tag-price'
+field[185142749] = 'tag-price'
 ;Product name
-field[19] = 'tag-name'
+field[2960715841] = 'tag-name'
 ;Status
-field[34] = 'attr-available'
+field[2091671594] = 'attr-available'
 
 [features_types]
 
