@@ -3,13 +3,9 @@
         "name": "Replace",
         "fields": [
             {
-                "tag": "h4",
-                "text": "Replace text"
-            },
-            {
                 "tag": "div",
                 "attrs": {
-                    "class": "form - group"
+                    "class": "form-group"
                 },
                 "childs": [
                     {
@@ -23,7 +19,7 @@
                         "tag": "input",
                         "attrs": {
                             "name": "what",
-                            "class": "form - control"
+                            "class": "form-control"
                         }
                     }
                 ]
@@ -31,7 +27,7 @@
             {
                 "tag": "div",
                 "attrs": {
-                    "class": "form - group"
+                    "class": "form-group"
                 },
                 "childs": [
                     {
@@ -45,7 +41,7 @@
                         "tag": "input",
                         "attrs": {
                             "name": "with",
-                            "class": "form - control"
+                            "class": "form-control"
                         }
                     }
                 ]
