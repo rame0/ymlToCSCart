@@ -62,6 +62,48 @@ $(document).ready(function () {
     }
 }
 );
+
+/**
+ * Builds form data for later ues
+ * @returns Object
+ */
+function buildFormData() {
+    var formFields = $('form.field-mapping > .form-group,form.field-mapping > div > .form-group');
+    var data = [];
+    for (var fldKey = 0; fldKey < formFields.length; fldKey++) {
+        var $this = $(formFields[fldKey]);
+        var $element = $this.find('.ympOption');
+
+        // if nothing selected, don't save it
+        if ($element.length > 0 && $element.val() !== '-1') {
+            var elData = {csvField: $element.attr('name'), ymlField: $element.val()};
+            if ($element.val() === 'text') {
+                elData.val = $element.siblings('.sampleData').find("input.text.form-control").val();
+            } else {
+                var $constructor = $this.find('.constructor');
+                var $settingsForm = $constructor.find('.settingsform');
+                var $selType = $constructor.find('.selectType');
+
+                // if nothing selected, don't save it
+                if ($settingsForm.length > 0 && $selType.val() !== '-1') {
+                    var $inputs = $settingsForm.find('input');
+                    var constructorFields = [];
+                    $inputs.each(function () {
+                        constructorFields.push({name: $(this).attr('name'), val: $(this).val()});
+                    });
+                    elData.modifer = {
+                        type: $selType.val(),
+                        params: constructorFields
+                    }
+                }
+            }
+            data.push(elData);
+        }
+    }
+    return data;
+}
+
+
 /**
  * Save preset function
  * Goes through each form element and creates preset
@@ -69,36 +111,8 @@ $(document).ready(function () {
  */
 function savePreset() {
     blockUI();
-    var formFields = $('form.field-mapping > .form-group,form.field-mapping > div > .form-group');
-    var data = [];
-    formFields.each(function () {
-        var $this = $(this);
-        var $element = $this.find('.ympOption');
 
-        // if nothing selected, don't save it
-        if ($element.length > 0 && $element.val() !== '-1') {
-            var elData = {csvField: $element.attr('name'), ymlField: $element.val()};
-
-
-            var $constructor = $this.find('.constructor');
-            var $settingsForm = $constructor.find('.settingsform');
-            var $selType = $constructor.find('.selectType');
-
-            // if nothing selected, don't save it
-            if ($settingsForm.length > 0 && $selType.val() !== '-1') {
-                var $inputs = $settingsForm.find('input');
-                var constructorFields = [];
-                $inputs.each(function () {
-                    constructorFields.push({name: $(this).attr('name'), val: $(this).val()});
-                });
-                elData.modifer = {
-                    type: $selType.val(),
-                    params: constructorFields
-                }
-            }
-            data.push(elData);
-        }
-    });
+    var data = buildFormData();
 
     // asc for file name
     var presetName = prompt('Enter name for preset\r\n !!! If file with this name already exists it will be overwritten !!!');
@@ -112,6 +126,8 @@ function savePreset() {
         }).done(function (data) {
             blockUI(false);
         });
+    } else {
+        blockUI(false);
     }
 }
 
@@ -122,12 +138,14 @@ function loadPreset(filename) {
     blockUI();
     // get rid of cache and load json preset
     $.getJSON("/files/preset/" + filename, {_: new Date().getTime()}, function (json) {
-        console.log(json);
         $('.dataModifer').dataModifer('hide');
         for (var i = 0; i < json.length; i++) {
             var $fld = $("select#" + json[i].csvField);
             $fld.val(json[i].ymlField);
             $fld.trigger('change');
+            if (json[i].ymlField === 'text') {
+                $fld.siblings('.sampleData').find("input.text.form-control").val(json[i].val);
+            }
             if (json[i].modifer) {
                 $fld.siblings('.dataModifer').dataModifer('show', json[i].modifer);
             }
