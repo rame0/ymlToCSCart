@@ -27,6 +27,20 @@ $(document).ready(function () {
     });
     $('button#savePreset').on('click', savePreset);
 
+    $('#loadPreset').hide().on('click', function () {
+        loadPreset($('select#preset').val());
+    });
+
+    $('select#preset').change(function () {
+        if ($(this).val() != -1) {
+            $('#loadPreset').show();
+        } else {
+            $('#loadPreset').hide();
+        }
+    });
+
+
+
     function changeSampleData(element) {
         var $element = $(element);
         var $selOpt = $element.find("option:selected");
@@ -46,15 +60,22 @@ $(document).ready(function () {
             $element.siblings('.dataModifer').dataModifer('show');
         }
     }
-});
-
+}
+);
+/**
+ * Save preset function
+ * Goes through each form element and creates preset
+ * then sends it via AJAX to the server
+ */
 function savePreset() {
+    blockUI();
     var formFields = $('form.field-mapping > .form-group,form.field-mapping > div > .form-group');
     var data = [];
     formFields.each(function () {
         var $this = $(this);
         var $element = $this.find('.ympOption');
 
+        // if nothing selected, don't save it
         if ($element.length > 0 && $element.val() !== '-1') {
             var elData = {csvField: $element.attr('name'), ymlField: $element.val()};
 
@@ -63,6 +84,7 @@ function savePreset() {
             var $settingsForm = $constructor.find('.settingsform');
             var $selType = $constructor.find('.selectType');
 
+            // if nothing selected, don't save it
             if ($settingsForm.length > 0 && $selType.val() !== '-1') {
                 var $inputs = $settingsForm.find('input');
                 var constructorFields = [];
@@ -78,16 +100,57 @@ function savePreset() {
         }
     });
 
+    // asc for file name
     var presetName = prompt('Enter name for preset\r\n !!! If file with this name already exists it will be overwritten !!!');
 
+    // Send data to server
     if (presetName) {
         $.ajax({
             url: "savePreset.php",
             method: 'POST',
             data: {"data": data, fname: presetName}
+        }).done(function (data) {
+            blockUI(false);
         });
     }
 }
+
+/**
+ * Load preset
+ */
+function loadPreset(filename) {
+    blockUI();
+    // get rid of cache and load json preset
+    $.getJSON("/files/preset/" + filename, {_: new Date().getTime()}, function (json) {
+        console.log(json);
+        $('.dataModifer').dataModifer('hide');
+        for (var i = 0; i < json.length; i++) {
+            var $fld = $("select#" + json[i].csvField);
+            $fld.val(json[i].ymlField);
+            $fld.trigger('change');
+            if (json[i].modifer) {
+                $fld.siblings('.dataModifer').dataModifer('show', json[i].modifer);
+            }
+        }
+        blockUI(false);
+    });
+}
+
+function blockUI(action) {
+    if (!window.blocker) {
+        window.blocker = $('<div/>').css({'z-index': 10000, position: 'absolute', top: 0, left: 0, background: 'rgba(0,0,0,0.2)'}).hide();
+        window.blocker.append($('<h1/>').css({position: 'fixed', color: '#fff', background: 'rgba(50,50,50,0.75)', padding: '20px 0', margin: '10% 40%', width: '20%', 'border-radius': '10px', 'text-align': 'center'}).text('Loading...'))
+        window.blocker.appendTo($('body'));
+    }
+    if (typeof action === 'undefined' || action === true) {
+        window.blocker.width($('body').width());
+        window.blocker.height($('body').height());
+        window.blocker.show();
+    } else {
+        window.blocker.hide();
+    }
+}
+
 
 /**
  * dataModifer object.
@@ -155,32 +218,60 @@ function savePreset() {
         }
     }
     DataModifer.prototype.show = function (element, data) {
+        this.$switcher.prop('checked', false);
         this.$element.show();
+
+        if (data && data.type && this.options.forms.hasOwnProperty(data.type)) {
+            this.showForm();
+            this.changeType(data.type);
+            if (data.type && data.params) {
+                this.fillModiferForm(data.params);
+            }
+        }
     };
-    DataModifer.prototype.hide = function (element, data) {
+    DataModifer.prototype.hide = function () {
+        this.$switcher.prop('checked', false);
+        this.hideForm();
         this.$element.hide();
     };
-    DataModifer.prototype.showForm = function (element, data) {
+    DataModifer.prototype.showForm = function () {
+        this.$switcher.prop('checked', true);
         this.$settingsForm = $("<div/>", {class: this.options.formContainerClass}).appendTo(this.$formwrapper);
         this.$formwrapper.show();
     };
-    DataModifer.prototype.hideForm = function (element, data) {
-        this.$settingsForm.remove();
+    DataModifer.prototype.hideForm = function () {
+        if (this.$settingsForm) {
+            this.$settingsForm.remove();
+        }
         this.$selectType[0].selectedIndex = 0;
         this.$formwrapper.hide();
     };
-    DataModifer.prototype.changeType = function (event, data) {
-        var $this = $(event.target);
-        var formType = $this.val();
+    DataModifer.prototype.changeType = function (prop) {
+        var formType = false;
+        if (typeof prop === 'string') {
+            formType = prop;
+            this.$selectType.val(formType);
+        } else if (typeof prop === 'object' && prop.target) {
+            var formType = $(prop.target).val();
+        } else {
+            return;
+        }
+
         this.$settingsForm.html('');
         if (this.options.forms.hasOwnProperty(formType)) {
             this.constructActionInputs(this.$settingsForm, this.options.forms[formType].fields);
         }
-
     };
-    DataModifer.prototype.fill = function (element, data) {
-
-    };
+    DataModifer.prototype.fillModiferForm = function (params) {
+        if (this.$settingsForm && params) {
+            for (var i = 0; i < params.length; i++) {
+                var $fld = this.$settingsForm.find('input[name=' + params[i].name + ']');
+                if ($fld && $fld.length > 0) {
+                    $fld.val(params[i].val);
+                }
+            }
+        }
+    }
 
     DataModifer.prototype.constructActionInputs = function ($parent, fields) {
         for (var i = 0; i < fields.length; i++) {
