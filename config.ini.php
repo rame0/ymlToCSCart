@@ -24,9 +24,9 @@ field[2091671594] = 'attr-available'
 
 [features_types]
 
-feature[C] = "Single"
-feature[M] = "Multiple"
-feature[S] = "Text"
+feature[C] = "Single-Select"
+feature[M] = "Multiple-Select"
+feature[S] = "Text-Select"
 feature[N] = "Number"
 feature[E] = "Brand/Manufacturer"
 feature[T] = "Text"
