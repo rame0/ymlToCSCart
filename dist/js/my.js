@@ -161,8 +161,15 @@ function blockUI(action) {
     'use strict';
     // PUBLIC CLASS DEFINITION
     var DataModifer = function (element, options) {
+        var that = this;
         this.$element = $(element).hide();
         this.options = $.extend({}, DataModifer.DEFAULTS, options);
+        $.getJSON(this.options.formsConfigFile, function (forms) {
+            that.options.forms = forms;
+            for (var key in that.options.forms) {
+                that.$selectType.append($('<option/>', {value: key}).text(that.options.forms[key].name));
+            }
+        });
         this.$switcher = $("<input/>", {class: this.options.switcherClass, type: "checkbox"});
         var label = $("<label/>");
         label.html(' Enable data modifer');
@@ -172,9 +179,7 @@ function blockUI(action) {
         this.$element.append(this.$formwrapper);
         this.$selectType = $('<select/>', {class: this.options.selectTypeClass, name: 'modiferTypeSelector'});
         this.$selectType.append($('<option/>', {value: '-1'}).text('--'));
-        for (var key in options.forms) {
-            this.$selectType.append($('<option/>', {value: key}).text(options.forms[key].name));
-        }
+
 
         this.$selectType.appendTo(this.$formwrapper);
 
@@ -188,6 +193,7 @@ function blockUI(action) {
         formwrapperClass: "constructor",
         formContainerClass: "settingsform form-inline",
         selectTypeClass: 'selectType form-control',
+        formsConfigFile: "/dist/js/dataModiferForms.json"
     };
     DataModifer.prototype.switch = function (event) {
         var $this = $(event.target);
