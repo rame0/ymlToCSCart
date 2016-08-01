@@ -1,0 +1,55 @@
+{
+    "replace": {
+        "name": "Replace",
+        "fields": [
+            {
+                "tag": "h4",
+                "text": "Replace text"
+            },
+            {
+                "tag": "div",
+                "attrs": {
+                    "class": "form - group"
+                },
+                "childs": [
+                    {
+                        "tag": "label",
+                        "attrs": {
+                            "for": "what"
+                        },
+                        "text": "What:"
+                    },
+                    {
+                        "tag": "input",
+                        "attrs": {
+                            "name": "what",
+                            "class": "form - control"
+                        }
+                    }
+                ]
+            },
+            {
+                "tag": "div",
+                "attrs": {
+                    "class": "form - group"
+                },
+                "childs": [
+                    {
+                        "tag": "label",
+                        "attrs": {
+                            "for": "with"
+                        },
+                        "text": "With:"
+                    },
+                    {
+                        "tag": "input",
+                        "attrs": {
+                            "name": "with",
+                            "class": "form - control"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

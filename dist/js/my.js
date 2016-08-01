@@ -188,26 +188,6 @@ function blockUI(action) {
         formwrapperClass: "constructor",
         formContainerClass: "settingsform form-inline",
         selectTypeClass: 'selectType form-control',
-        forms: {
-            replace: {
-                name: "Replace",
-                fields: [
-                    {tag: 'h4', text: 'Replace text'},
-                    {tag: 'div', attrs: {class: 'form-group'},
-                        childs: [
-                            {tag: 'label', attrs: {for : 'what'}, text: 'What:'},
-                            {tag: 'input', attrs: {name: 'what', class: 'form-control'}},
-                        ]
-                    },
-                    {tag: 'div', attrs: {class: 'form-group'},
-                        childs: [
-                            {tag: 'label', attrs: {for : 'with'}, text: 'With:'},
-                            {tag: 'input', attrs: {name: 'with', class: 'form-control'}},
-                        ]
-                    }
-                ]
-            }
-        }
     };
     DataModifer.prototype.switch = function (event) {
         var $this = $(event.target);
