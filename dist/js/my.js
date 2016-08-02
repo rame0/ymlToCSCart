@@ -31,6 +31,18 @@ $(document).ready(function () {
         loadPreset($('select#preset').val());
     });
 
+    $('#nextStep').on('click', function () {
+        var url = $('.field-mapping').prop('action'),
+                data = buildFormData(),
+                ymlFile = $('#ymlFilePath').val(),
+                csvFile = $('#csvFilePath').val();
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: {"data": data, yml: ymlFile, csv: csvFile}
+        })
+    })
+
     $('select#preset').change(function () {
         if ($(this).val() != -1) {
             $('#loadPreset').show();
