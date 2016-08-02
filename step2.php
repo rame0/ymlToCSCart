@@ -27,19 +27,22 @@ foreach ($presetsFiles as $value) {
     }
 }
 ?>
-<h1>Step 2: Fields mapping</h1>
-<div class="row">
-    <div class="col-sm-10">
-        <form method="POST" action="step3.php" class="form-horizontal field-mapping">
-            <? if (!is_file($ymlDir . $_POST['yml'])) { ?>
-                <h3 class="alert alert-danger">YML not found!</h3>
-                <button class="btn btn-danger" onclick="javascript:history.go(-1)">Back</button>
-            <? } elseif (!is_file($csvDir . $_POST['csv'])) { ?>
-                <h3 class="alert alert-danger">CSV not found!</h3>
-                <button class="btn btn-danger" onclick="javascript:history.go(-1)">Back</button>
+<? if (!is_file($ymlDir . $_POST['yml'])) { ?>
+    <h3 class="alert alert-danger">YML not found!</h3>
+    <button class="btn btn-danger" onclick="javascript:history.go(-1)">Back</button>
+<? } elseif (!is_file($csvDir . $_POST['csv'])) { ?>
+    <h3 class="alert alert-danger">CSV not found!</h3>
+    <button class="btn btn-danger" onclick="javascript:history.go(-1)">Back</button>
+    <?
+} else {
+    ?>
+    <input id="ymlFilePath" value="<?= $ymlDir . $_POST['yml'] ?>" style="display:none">
+    <input id="csvFilePath" value="<?= $csvDir . $_POST['csv'] ?>" style="display:none">
+    <h1>Step 2: Fields mapping</h1>
+    <div class="row">
+        <div class="col-sm-10">
+            <form method="POST" action="step3.php" class="form-horizontal field-mapping">
                 <?
-            } else {
-
                 // if filea are availuble, load them
                 $yml = simplexml_load_file($ymlDir . $_POST['yml']);
                 $csv = fopen($csvDir . $_POST['csv'], "r");
@@ -121,34 +124,35 @@ foreach ($presetsFiles as $value) {
                     showOption(crc32($fld), $fld, $csvGoodsData[$csvFldKey], $ymlParams, $config);
                     ?>
                 <? endforeach; ?>
-            <? }
-            ?>
-        </form>
-    </div>
-    <div class="col-sm-2">
-        <div class="row">
-            <h4>Use preset</h4>
-            <div>
-                <select class="form-control" id="preset">
-                    <option value="-1">--</option>
-                    <? for ($i = 0; $i < count($presets); $i++): ?>
-                        <option value="<?= $presets[$i] ?>"><?= $presets[$i] ?></option>
-                    <? endfor; ?>
-                </select>
-                <button id="loadPreset" class="btn btn-success btn-sm">Load preset</button>
+            </form>
+        </div>
+        <div class="col-sm-2">
+            <div class="row">
+                <h4>Use preset</h4>
+                <div>
+                    <select class="form-control" id="preset">
+                        <option value="-1">--</option>
+                        <?
+                        for ($i = 0; $i < count($presets); $i++):
+                            ?>
+                            <option value="<?= $presets[$i] ?>"><?= $presets[$i] ?></option>
+                        <? endfor; ?>
+                    </select>
+                    <button id="loadPreset" class="btn btn-success btn-sm">Load preset</button>
+                </div>
+            </div>
+            <hr/>
+            <div class="row">
+                <button id="savePreset" class="btn btn-primary btn-sm">Save Preset</button>
+            </div>
+            <hr/>
+            <div class="row">
+                <button id="nextStep" class="btn btn-primary">Next Step</button>
             </div>
         </div>
-        <hr/>
-        <div class="row">
-            <button id="savePreset" class="btn btn-primary btn-sm">Save Preset</button>
-        </div>
-        <hr/>
-        <div class="row">
-            <button id="nextStep" class="btn btn-primary">Next Step</button>
-        </div>
     </div>
-</div>
-<?
+    <?
+}
 include 'tpl/foot.php';
 
 /**
