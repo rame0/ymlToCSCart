@@ -33,13 +33,14 @@ $(document).ready(function () {
 
     $('#nextStep').on('click', function () {
         var url = $('.field-mapping').prop('action'),
-                data = buildFormData(),
+                data = buildFormData(true),
                 ymlFile = $('#ymlFilePath').val(),
-                csvFile = $('#csvFilePath').val();
+                csvFile = $('#csvFilePath').val(),
+                catId = $('select.catSelector').val();
         $.ajax({
             url: url,
             method: 'POST',
-            data: {"data": data, yml: ymlFile, csv: csvFile}
+            data: {"data": data, yml: ymlFile, csv: csvFile, catId: catId}
         })
     })
 
@@ -79,16 +80,16 @@ $(document).ready(function () {
  * Builds form data for later ues
  * @returns Object
  */
-function buildFormData() {
+function buildFormData(useFldType) {
     var formFields = $('form.field-mapping > .form-group,form.field-mapping > div > .form-group');
-    var data = [];
+    var data = {};
     for (var fldKey = 0; fldKey < formFields.length; fldKey++) {
         var $this = $(formFields[fldKey]);
         var $element = $this.find('.ympOption');
 
         // if nothing selected, don't save it
         if ($element.length > 0 && $element.val() !== '-1') {
-            var elData = {csvField: $element.attr('name'), ymlField: $element.val()};
+            var elData = {ymlField: $element.val()};
             if ($element.val() === 'text') {
                 elData.val = $element.siblings('.sampleData').find("input.text.form-control").val();
             } else {
@@ -109,7 +110,14 @@ function buildFormData() {
                     }
                 }
             }
-            data.push(elData);
+            if (useFldType) {
+                if (!data[$element.data('type')]) {
+                    data[$element.data('type')] = {};
+                }
+                data[$element.data('type')][$element.attr('name')] = elData;
+            } else {
+                data[$element.attr('name')] = elData;
+            }
         }
     }
     return data;
@@ -151,8 +159,8 @@ function loadPreset(filename) {
     // get rid of cache and load json preset
     $.getJSON("/files/preset/" + filename, {_: new Date().getTime()}, function (json) {
         $('.dataModifer').dataModifer('hide');
-        for (var i = 0; i < json.length; i++) {
-            var $fld = $("select#" + json[i].csvField);
+        for (var i in json) {
+            var $fld = $("select#" + i);
             $fld.val(json[i].ymlField);
             $fld.trigger('change');
             if (json[i].ymlField === 'text') {
