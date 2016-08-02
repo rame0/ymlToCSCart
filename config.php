@@ -41,3 +41,4 @@ $loginLocation = 'http://' . $_SERVER['HTTP_HOST'] . '/index.php';
 $ymlDir = 'files/yml' . DIRECTORY_SEPARATOR;
 $csvDir = 'files/csv' . DIRECTORY_SEPARATOR;
 $presetDir = 'files/preset' . DIRECTORY_SEPARATOR;
+$resultsDir = 'files/results' . DIRECTORY_SEPARATOR;
