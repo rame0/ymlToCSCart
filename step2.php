@@ -49,6 +49,7 @@ foreach ($presetsFiles as $value) {
                 // Get data about fields from CSV
                 $csvFields = fgetcsv($csv, 0, ';');
                 $csvGoodsData = fgetcsv($csv, 0, ';');
+                fclose($csv);
 
                 // Load offers child nodes from YML
                 $params = $yml->xpath('/yml_catalog/shop/offers/offer/child::*');
