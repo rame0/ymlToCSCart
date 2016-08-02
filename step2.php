@@ -27,6 +27,7 @@ foreach ($presetsFiles as $value) {
     }
 }
 ?>
+
 <? if (!is_file($ymlDir . $_POST['yml'])) { ?>
     <h3 class="alert alert-danger">YML not found!</h3>
     <button class="btn btn-danger" onclick="javascript:history.go(-1)">Back</button>
@@ -35,34 +36,45 @@ foreach ($presetsFiles as $value) {
     <button class="btn btn-danger" onclick="javascript:history.go(-1)">Back</button>
     <?
 } else {
+    // if filea are availuble, load them
+    $yml = simplexml_load_file($ymlDir . $_POST['yml']);
+    $csv = fopen($csvDir . $_POST['csv'], "r");
+    // Get data about fields from CSV
+    $csvFields = fgetcsv($csv, 0, ';');
+    $csvGoodsData = fgetcsv($csv, 0, ';');
+    fclose($csv);
+
+    // Load offers child nodes from YML
+    $params = $yml->xpath('/yml_catalog/shop/offers/offer/child::*');
+    //var_dump($params);die();
+    $usedYMLParams = [];
+    $ymlParams = [];
     ?>
     <input id="ymlFilePath" value="<?= $ymlDir . $_POST['yml'] ?>" style="display:none">
     <input id="csvFilePath" value="<?= $csvDir . $_POST['csv'] ?>" style="display:none">
     <h1>Step 2: Fields mapping</h1>
     <div class="row">
         <div class="col-sm-10">
+            <h2>YML categories to export</h2>
+            <select class="form-control catSelector">
+                <option value='-1'> All </option>
+                <? foreach ($yml->shop->categories->category as $category) : ?>
+                    <option value="<?= $category['id'] ?>"><?= $category->__toString() ?></option>
+                <? endforeach; ?>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-10">
+            <h2>Map the fields</h2>
             <form method="POST" action="step3.php" class="form-horizontal field-mapping">
                 <?
-                // if filea are availuble, load them
-                $yml = simplexml_load_file($ymlDir . $_POST['yml']);
-                $csv = fopen($csvDir . $_POST['csv'], "r");
-                // Get data about fields from CSV
-                $csvFields = fgetcsv($csv, 0, ';');
-                $csvGoodsData = fgetcsv($csv, 0, ';');
-                fclose($csv);
-
-                // Load offers child nodes from YML
-                $params = $yml->xpath('/yml_catalog/shop/offers/offer/child::*');
-                //var_dump($params);die();
-                $usedYMLParams = [];
-                $ymlParams = [];
-
                 /* @var $params SimpleXMLElement */
                 // Find out what we got in offer node attributes and add them in our list
                 // also save in value where option is come from
                 foreach ($yml->shop->offers->offer[0]->attributes() as $atrName => $atrVal) {
-                    $usedYMLParams[] = "attr-$atrName";
-                    $ymlParams[] = ["attr-$atrName", $atrVal->__toString()];
+                    $usedYMLParams[] = "attr-->$atrName";
+                    $ymlParams[] = ["attr-->$atrName", $atrVal->__toString()];
                 }
 
                 // find out which child nodes of offer we have
@@ -74,9 +86,9 @@ foreach ($presetsFiles as $value) {
                     $tagName = $param->getName();
                     // if we find param, thet get its attr 'name' value as param name
                     if ($tagName == "param") {
-                        if (!in_array('tag-param-' . $param['name']->__toString(), $usedYMLParams)) {
-                            $usedYMLParams[] = 'tag-param-' . $param['name']->__toString();
-                            $ymlParams[] = ['tag-param-' . $param['name']->__toString(), $param->__toString()];
+                        if (!in_array('tag-->param-->' . $param['name']->__toString(), $usedYMLParams)) {
+                            $usedYMLParams[] = 'tag-->param-->' . $param['name']->__toString();
+                            $ymlParams[] = ['tag-->param-->' . $param['name']->__toString(), $param->__toString()];
                             // set special value, so we will know that we have to build this value before add to results
                         } else {
                             continue;
@@ -85,15 +97,15 @@ foreach ($presetsFiles as $value) {
                         $usedYMLParams[] = "build_Cat_Name";
                         $ymlParams[] = ['build_Cat_Name', ""];
                         // save other tags
-                    } elseif (!in_array("tag-$tagName", $usedYMLParams)) {
-                        $usedYMLParams[] = "tag-$tagName";
-                        $ymlParams[] = ["tag-$tagName", $param->__toString()];
+                    } elseif (!in_array("tag-->$tagName", $usedYMLParams)) {
+                        $usedYMLParams[] = "tag-->$tagName";
+                        $ymlParams[] = ["tag-->$tagName", $param->__toString()];
                     }
                 }
                 // sorting array might be usefull
                 sort($ymlParams, SORT_ASC);
 
-                // now, we'll fill our forv
+                // now, we'll fill our form
                 ?>
                 <div class="form-group">
                     <h3 class="col-sm-3">CSV field</h3>
@@ -180,7 +192,7 @@ function showOption($id, $name, $value, $ymlParams, $config) {
             <? endif ?>
         </label>
         <div class="col-sm-9">
-            <select class="form-control ympOption" name="<?= $id ?>" id="<?= $id ?>">
+            <select class="form-control ympOption" name="<?= $id ?>" id="<?= $id ?>" data-type="<?= $type === false ? "field" : "feature" ?>">
                 <option value='-1'> -- </option>
                 <option value='text'> Custom text</option>
                 <?
