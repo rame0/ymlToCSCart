@@ -42,7 +42,7 @@ if (empty($_POST) || empty($_POST['data'])) {
 //    print_r($_POST['data']);
 
     if (!is_dir($resultsDir)) {
-        mkdir($resultsDir, '0764');
+        mkdir($resultsDir, 0764);
     }
     $newCSVFilename = basename($_POST['csv']);
     if (is_file($resultsDir . $newCSVFilename)) {
@@ -84,6 +84,7 @@ if (empty($_POST) || empty($_POST['data'])) {
     $offers = $yml->xpath($xpathOrderFilter);
 
     $results = [];
+    $savedDataCounter = 0;
     foreach ($offers as $offer) {
         $row = array_fill(0, count($csvFieldsMap), '');
 
@@ -100,11 +101,13 @@ if (empty($_POST) || empty($_POST['data'])) {
                 $featuresString .= $featureMapIndex . "[$ftData]; ";
             }
         }
-        $row[$featuresCol] = $featuresString;
+
+        $row[$featuresCol] = substr($featuresString, 0, -2);
 
         fputcsv($newCSVFile, $row, ";", '"');
+        $savedDataCounter++;
     }
-
+    die(json_encode(['type' => 'success', 'msg' => 'Data saved! Total rows:' . $savedDataCounter]));
     fclose($newCSVFile);
 }
 
@@ -130,6 +133,15 @@ function parseColData($data, $offer) {
             }
             $ret = trim($catString, '/');
             break;
+        case 'сat_Name':
+            // due to the nature of SimpleXMLElement, the xpath applied to the child will still be applied to the root of XML
+            $offerCatalog = $offer->xpath("//category[@id=$catId]")[0];
+            if ($offerCatalog !== false) {
+                $ret = trim($catString, '/');
+            } else {
+                $ret = "";
+            }
+            break;
         default :
             $tmp = explode('-->', $action);
             if (count($tmp) == 2) {
@@ -137,7 +149,7 @@ function parseColData($data, $offer) {
             } elseif (count($tmp) == 3) {
                 list($elType, $elName, $elVal) = $tmp;
             } else {
-                die(json_encode(['type' => 'error', 'msg' => 'Usupporded data structure!']));
+                die(json_encode(['type' => 'error', 'msg' => "Unsupporded data structure in '" . $action . "'"]));
             }
             switch ($elType) {
                 case 'attr':
@@ -155,25 +167,67 @@ function parseColData($data, $offer) {
                     }
                     break;
             }
-            if (!empty($data['modifer'])) {
-                switch ($data['modifer']['type']) {
-                    case 'replace':
-                        $what = $with = false;
-                        foreach ($data['modifer']['params'] as $param) {
-                            if ($param['name'] == "what") {
-                                $what = $param['val'];
-                            } elseif ($param['name'] == "with") {
-                                $with = $param['val'];
-                            }
-                        }
-                        if ($what !== false && $with !== false) {
-                            $ret = str_replace($what, $with, $ret);
-                        }
-                        break;
-                }
-            }
             unset($elType, $elName, $elVal);
             break;
     }
+
+    if (!empty($data['modifer']) && !empty($ret)) {
+        switch ($data['modifer']['type']) {
+            case 'replace':
+                $what = $with = false;
+                foreach ($data['modifer']['params'] as $param) {
+                    if ($param['name'] == "what") {
+                        $what = $param['val'];
+                    } elseif ($param['name'] == "with") {
+                        $with = $param['val'];
+                    }
+                }
+                if ($what !== false && $with !== false) {
+                    $ret = str_replace($what, $with, $ret);
+                }
+                break;
+            case 'textbefore':
+                $what = false;
+                foreach ($data['modifer']['params'] as $param) {
+                    if ($param['name'] == "what") {
+                        $what = $param['val'];
+                        break;
+                    }
+                }
+                if ($what !== false) {
+                    $ret = $what . $ret;
+                }
+                break;
+            case 'textafter':
+                $what = false;
+                foreach ($data['modifer']['params'] as $param) {
+                    if ($param['name'] == "what") {
+                        $what = $param['val'];
+                        break;
+                    }
+                }
+                if ($what !== false) {
+                    $ret = $ret . $what;
+                }
+                break;
+            case 'explode':
+                $delimiter = $index = 0;
+
+                foreach ($data['modifer']['params'] as $param) {
+                    if ($param['name'] == "delimiter") {
+                        $delimiter = $param['val'];
+                    } elseif ($param['name'] == "index") {
+                        $index = intval($param['val']);
+                    }
+                }
+                if ($delimiter !== 0 && is_int($index) && $index >= 0) {
+                    $tmp = explode($delimiter, $ret);
+                    var_dump($tmp);
+                    $ret = $tmp[$index];
+                }
+                break;
+        }
+    }
+
     return $ret;
 }
