@@ -67,7 +67,7 @@ foreach ($presetsFiles as $value) {
         <div class="col-sm-10">
             <h2>Map the fields</h2>
             <?
-            if ($_POST['images'] == 'on') {
+            if (!empty($_POST['images']) && $_POST['images'] == 'on') {
                 ?><div class="alert alert-danger">
                     Only "Product Code" is necessary. All other fields will be ignored!
                 </div><?
@@ -169,6 +169,7 @@ foreach ($presetsFiles as $value) {
             <hr/>
             <div class="row">
                 <button id="nextStep" class="btn btn-primary">Next Step</button>
+                <a class="btn btn-danger" href="/main.php">go HOME</a>
             </div>
         </div>
     </div>
