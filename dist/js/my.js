@@ -166,15 +166,20 @@ function loadPreset(filename) {
     // get rid of cache and load json preset
     $.getJSON("/files/preset/" + filename, {_: new Date().getTime()}, function (json) {
         $('.dataModifer').dataModifer('hide');
+        $("select.ympOption").val(-1).trigger("change");
         for (var i in json) {
             var $fld = $("select#" + i);
-            $fld.val(json[i].ymlField);
-            $fld.trigger('change');
-            if (json[i].ymlField === 'text') {
-                $fld.siblings('.sampleData').find("input.text.form-control").val(json[i].val);
-            }
-            if (json[i].modifer) {
-                $fld.siblings('.dataModifer').dataModifer('show', json[i].modifer);
+                $fld.val(json[i].ymlField);
+            if ($fld.val()) {
+                $fld.trigger('change');
+                if (json[i].ymlField === 'text') {
+                    $fld.siblings('.sampleData').find("input.text.form-control").val(json[i].val);
+                }
+                if (json[i].modifer) {
+                    $fld.siblings('.dataModifer').dataModifer('show', json[i].modifer);
+                }
+            }else{
+                $fld.val(-1);
             }
         }
         blockUI(false);
