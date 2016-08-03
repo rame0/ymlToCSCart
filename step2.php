@@ -96,6 +96,8 @@ foreach ($presetsFiles as $value) {
                     } elseif ($tagName == "categoryId" && !in_array("build_Cat_Name", $usedYMLParams)) {
                         $usedYMLParams[] = "build_Cat_Name";
                         $ymlParams[] = ['build_Cat_Name', ""];
+                        $usedYMLParams[] = "cat_Name";
+                        $ymlParams[] = ['cat_Name', ""];
                         // save other tags
                     } elseif (!in_array("tag-->$tagName", $usedYMLParams)) {
                         $usedYMLParams[] = "tag-->$tagName";
