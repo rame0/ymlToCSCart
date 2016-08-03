@@ -101,5 +101,54 @@
                 ]
             }
         ]
+    },
+    "explode": {
+        "name": "Explode value",
+        "fields": [
+            {
+                "tag": "div",
+                "attrs": {
+                    "class": "form-group"
+                },
+                "childs": [
+                    {
+                        "tag": "label",
+                        "attrs": {
+                            "for": "delimiter"
+                        },
+                        "text": "Delimiter:"
+                    },
+                    {
+                        "tag": "input",
+                        "attrs": {
+                            "name": "delimiter",
+                            "class": "form-control"
+                        }
+                    }
+                ]
+            },
+            {
+                "tag": "div",
+                "attrs": {
+                    "class": "form-group"
+                },
+                "childs": [
+                    {
+                        "tag": "label",
+                        "attrs": {
+                            "for": "index"
+                        },
+                        "text": "Array index:"
+                    },
+                    {
+                        "tag": "input",
+                        "attrs": {
+                            "name": "index",
+                            "class": "form-control"
+                        }
+                    }
+                ]
+            }
+        ]
     }
 }
