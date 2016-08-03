@@ -38,9 +38,6 @@ if (empty($_POST) || empty($_POST['data'])) {
     $csvGoodsData = fgetcsv($csv, 0, ';');
     fclose($csv);
 
-//    print_r($csvFields);
-//    print_r($_POST['data']);
-
     if (!is_dir($resultsDir)) {
         mkdir($resultsDir, 0764);
     }
@@ -63,7 +60,6 @@ if (empty($_POST) || empty($_POST['data'])) {
             $imageCol = $i;
         }
     }
-//    print_r($csvFieldsMap);
 
 
     $categoryesToConvert = '';
@@ -215,7 +211,6 @@ function parseColData($data, $offer) {
                 }
                 if ($delimiter !== 0 && is_int($index) && $index >= 0) {
                     $tmp = explode($delimiter, $ret);
-                    var_dump($tmp);
                     $ret = $tmp[$index];
                 }
                 break;

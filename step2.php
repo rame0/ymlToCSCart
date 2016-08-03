@@ -46,7 +46,6 @@ foreach ($presetsFiles as $value) {
 
     // Load offers child nodes from YML
     $params = $yml->xpath('/yml_catalog/shop/offers/offer/child::*');
-    //var_dump($params);die();
     $usedYMLParams = [];
     $ymlParams = [];
     ?>
