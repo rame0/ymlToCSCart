@@ -32,6 +32,7 @@ $(document).ready(function () {
     });
 
     $('#nextStep').on('click', function () {
+        blockUI();
         var url = $('.field-mapping').prop('action'),
                 data = buildFormData(true),
                 ymlFile = $('#ymlFilePath').val(),
@@ -41,8 +42,13 @@ $(document).ready(function () {
             url: url,
             method: 'POST',
             data: {"data": data, yml: ymlFile, csv: csvFile, catId: catId}
-        })
-    })
+        }).done(function (data) {
+            if (data.type && data.msg) {
+                alert(data.type + ": " + data.msg);
+            }
+            blockUI(false);
+        });
+    });
 
     $('select#preset').change(function () {
         if ($(this).val() != -1) {
@@ -69,7 +75,8 @@ $(document).ready(function () {
                     $("<input/>").prop({'class': "text form-control", "placeholder": "Текст для поля " + $parent.parent().find('label div').text()})
                     );
         } else {
-            $parent.find(".sampleData span.data").text(Base64.decode($selOpt.data('sample')));
+            if ($selOpt.data('sample'))
+                $parent.find(".sampleData span.data").text(Base64.decode($selOpt.data('sample')));
             $element.siblings('.dataModifer').dataModifer('show');
         }
     }
@@ -176,13 +183,11 @@ function loadPreset(filename) {
 
 function blockUI(action) {
     if (!window.blocker) {
-        window.blocker = $('<div/>').css({'z-index': 10000, position: 'absolute', top: 0, left: 0, background: 'rgba(0,0,0,0.2)'}).hide();
+        window.blocker = $('<div/>').css({'z-index': 10000, position: 'fixed', top: 0, left: 0, bottom: 0, right: 0, background: 'rgba(0,0,0,0.2)'}).hide();
         window.blocker.append($('<h1/>').css({position: 'fixed', color: '#fff', background: 'rgba(50,50,50,0.75)', padding: '20px 0', margin: '10% 40%', width: '20%', 'border-radius': '10px', 'text-align': 'center'}).text('Loading...'))
         window.blocker.appendTo($('body'));
     }
     if (typeof action === 'undefined' || action === true) {
-        window.blocker.width($('body').width());
-        window.blocker.height($('body').height());
         window.blocker.show();
     } else {
         window.blocker.hide();
