@@ -67,79 +67,86 @@ foreach ($presetsFiles as $value) {
     <div class="row">
         <div class="col-sm-10">
             <h2>Map the fields</h2>
-            <form method="POST" action="step3.php" class="form-horizontal field-mapping">
-                <?
-                /* @var $params SimpleXMLElement */
-                // Find out what we got in offer node attributes and add them in our list
-                // also save in value where option is come from
-                foreach ($yml->shop->offers->offer[0]->attributes() as $atrName => $atrVal) {
-                    $usedYMLParams[] = "attr-->$atrName";
-                    $ymlParams[] = ["attr-->$atrName", $atrVal->__toString()];
-                }
+            <?
+            if ($_POST['images'] == 'on') {
+                ?><div class="alert alert-danger">
+                    Only "Product Code" is necessary. All other fields will be ignored!
+                </div><?
+                echo '<form method="POST" action="convertForImages.php" class="form-horizontal field-mapping">';
+            } else {
+                echo '<form method="POST" action="step3.php" class="form-horizontal field-mapping">';
+            }
+            /* @var $params SimpleXMLElement */
+            // Find out what we got in offer node attributes and add them in our list
+            // also save in value where option is come from
+            foreach ($yml->shop->offers->offer[0]->attributes() as $atrName => $atrVal) {
+                $usedYMLParams[] = "attr-->$atrName";
+                $ymlParams[] = ["attr-->$atrName", $atrVal->__toString()];
+            }
 
-                // find out which child nodes of offer we have
-                // and save 'param' childs with unique names as separate fields
-                // we need only unique tags and params, so we have to check that too
-                // also save in value where option is come from
-                foreach ($params as $param) {
-                    /* @var $param SimpleXMLElement */
-                    $tagName = $param->getName();
-                    // if we find param, thet get its attr 'name' value as param name
-                    if ($tagName == "param") {
-                        if (!in_array('tag-->param-->' . $param['name']->__toString(), $usedYMLParams)) {
-                            $usedYMLParams[] = 'tag-->param-->' . $param['name']->__toString();
-                            $ymlParams[] = ['tag-->param-->' . $param['name']->__toString(), $param->__toString()];
-                            // set special value, so we will know that we have to build this value before add to results
-                        } else {
-                            continue;
-                        }
-                    } elseif ($tagName == "categoryId" && !in_array("build_Cat_Name", $usedYMLParams)) {
-                        $usedYMLParams[] = "build_Cat_Name";
-                        $ymlParams[] = ['build_Cat_Name', ""];
-                        $usedYMLParams[] = "cat_Name";
-                        $ymlParams[] = ['cat_Name', ""];
-                        // save other tags
-                    } elseif (!in_array("tag-->$tagName", $usedYMLParams)) {
-                        $usedYMLParams[] = "tag-->$tagName";
-                        $ymlParams[] = ["tag-->$tagName", $param->__toString()];
-                    }
-                }
-                // sorting array might be usefull
-                sort($ymlParams, SORT_ASC);
-
-                // now, we'll fill our form
-                ?>
-                <div class="form-group">
-                    <h3 class="col-sm-3">CSV field</h3>
-                    <div class="col-sm-9">
-                        <h3>YML field</h3>
-                    </div>
-                </div>
-                <?
-                foreach ($csvFields as $csvFldKey => $fld) :
-                    if ($fld == "Features") {
-                        $features = explode("; ", $csvGoodsData[$csvFldKey]);
-                        ?>
-                        <div class="col-sm-11 col-sm-offset-1">
-                            <h3>Params</h3>
-                            <?
-                            foreach ($features as $feature) {
-                                list($name, $tmp) = explode(": ", $feature);
-                                $tmp = explode("[", $tmp);
-                                $type = $tmp[0];
-                                $value = trim($tmp[1], "]");
-
-                                showOption(crc32("feature-$name"), $name, [$value, $type], $ymlParams, $config);
-                            }
-                            ?>
-                        </div>
-                        <?
+            // find out which child nodes of offer we have
+            // and save 'param' childs with unique names as separate fields
+            // we need only unique tags and params, so we have to check that too
+            // also save in value where option is come from
+            foreach ($params as $param) {
+                /* @var $param SimpleXMLElement */
+                $tagName = $param->getName();
+                // if we find param, thet get its attr 'name' value as param name
+                if ($tagName == "param") {
+                    if (!in_array('tag-->param-->' . $param['name']->__toString(), $usedYMLParams)) {
+                        $usedYMLParams[] = 'tag-->param-->' . $param['name']->__toString();
+                        $ymlParams[] = ['tag-->param-->' . $param['name']->__toString(), $param->__toString()];
+                        // set special value, so we will know that we have to build this value before add to results
+                    } else {
                         continue;
                     }
-                    showOption(crc32($fld), $fld, $csvGoodsData[$csvFldKey], $ymlParams, $config);
+                } elseif ($tagName == "categoryId" && !in_array("build_Cat_Name", $usedYMLParams)) {
+                    $usedYMLParams[] = "build_Cat_Name";
+                    $ymlParams[] = ['build_Cat_Name', ""];
+                    $usedYMLParams[] = "cat_Name";
+                    $ymlParams[] = ['cat_Name', ""];
+                    // save other tags
+                } elseif (!in_array("tag-->$tagName", $usedYMLParams)) {
+                    $usedYMLParams[] = "tag-->$tagName";
+                    $ymlParams[] = ["tag-->$tagName", $param->__toString()];
+                }
+            }
+            // sorting array might be usefull
+            sort($ymlParams, SORT_ASC);
+
+            // now, we'll fill our form
+            ?>
+            <div class="form-group">
+                <h3 class="col-sm-3">CSV field</h3>
+                <div class="col-sm-9">
+                    <h3>YML field</h3>
+                </div>
+            </div>
+            <?
+            foreach ($csvFields as $csvFldKey => $fld) {
+                if ($fld == "Features") {
+                    $features = explode("; ", $csvGoodsData[$csvFldKey]);
                     ?>
-                <? endforeach; ?>
-            </form>
+                    <div class="col-sm-11 col-sm-offset-1">
+                        <h3>Params</h3>
+                        <?
+                        foreach ($features as $feature) {
+                            list($name, $tmp) = explode(": ", $feature);
+                            $tmp = explode("[", $tmp);
+                            $type = $tmp[0];
+                            $value = trim($tmp[1], "]");
+
+                            showOption(crc32("feature-$name"), $name, [$value, $type], $ymlParams, $config);
+                        }
+                        ?>
+                    </div>
+                    <?
+                    continue;
+                }
+                showOption(crc32($fld), $fld, $csvGoodsData[$csvFldKey], $ymlParams, $config);
+            }
+            echo '</form>';
+            ?>
         </div>
         <div class="col-sm-2">
             <div class="row">

@@ -71,6 +71,10 @@ include 'tpl/head.php';
             <? endforeach; ?>
         </select>
     <? endif; ?>
+    <label for = "images">
+        <input name="images" id="images" type="checkbox">
+        It is Images CSV
+    </label>
     <button class = "btn btn-lg btn-primary btn-block" type = "submit">Next Step</button>
 </form>
 
