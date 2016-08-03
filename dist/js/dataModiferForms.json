@@ -47,5 +47,59 @@
                 ]
             }
         ]
+    },
+    "textbefore": {
+        "name": "Add text before data",
+        "fields": [
+            {
+                "tag": "div",
+                "attrs": {
+                    "class": "form-group"
+                },
+                "childs": [
+                    {
+                        "tag": "label",
+                        "attrs": {
+                            "for": "text"
+                        },
+                        "text": "Text:"
+                    },
+                    {
+                        "tag": "input",
+                        "attrs": {
+                            "name": "text",
+                            "class": "form-control"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "textafter": {
+        "name": "Add text after data",
+        "fields": [
+            {
+                "tag": "div",
+                "attrs": {
+                    "class": "form-group"
+                },
+                "childs": [
+                    {
+                        "tag": "label",
+                        "attrs": {
+                            "for": "text"
+                        },
+                        "text": "Text:"
+                    },
+                    {
+                        "tag": "input",
+                        "attrs": {
+                            "name": "text",
+                            "class": "form-control"
+                        }
+                    }
+                ]
+            }
+        ]
     }
 }
