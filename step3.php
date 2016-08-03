@@ -129,11 +129,11 @@ function parseColData($data, $offer) {
             }
             $ret = trim($catString, '/');
             break;
-        case 'сat_Name':
+        case 'cat_Name':
             // due to the nature of SimpleXMLElement, the xpath applied to the child will still be applied to the root of XML
             $offerCatalog = $offer->xpath("//category[@id=$catId]")[0];
             if ($offerCatalog !== false) {
-                $ret = trim($catString, '/');
+                $ret = trim($offerCatalog, '/');
             } else {
                 $ret = "";
             }
@@ -218,7 +218,7 @@ function parseColData($data, $offer) {
                 }
                 if ($delimiter !== 0 && is_int($index) && $index >= 0) {
                     $tmp = explode($delimiter, $ret);
-                    $ret = $tmp[$index];
+                    $ret = empty($tmp[$index]) ? '' : $tmp[$index];
                 }
                 break;
         }
